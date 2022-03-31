@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.0.7/angular.min.js"></script>
+<body>
+
+<div ng-app="myApp" ng-controller="myCtrl">
+	<div>{{eachRet}}</div>
+	<hr />
+	<div>{{allRet}}</div>
+</div>
+
+<script>
+var app = angular.module('myApp', []);
+app.controller('myCtrl', function($scope, $http, $q) {
+    
+	$scope.eachRet = "";
+	$scope.allRet  = [];
+	
+	var arrayNumeros = [1,2,3,4];
+	
+	$scope.carrega = function(work, q){
+		var deferredx = q.defer();
+		$http.get('ajax.txt').then(function(response) {
+		
+			/*Passando o WORK como parametro e retornando*/
+			deferredx.resolve(response.data +" "+ work);
+		});
+		return deferredx.promise;
+	};
+	
+	
+	 $scope.loadJob = function(b) {
+		var deferred = $q.defer();
+		var queue = b;
+		
+		var retornos = [];
+		function doWork(work) {
+			var loadPromise = $scope.carrega(work, $q);
+			loadPromise.then(function (eData) {
+				$scope.eachRet += eData + ", ";
+				retornos.push(eData);
+				nextWork(eData);
+			}, function () {
+				nextWork(eData);
+			});
+		
+			
+		}
+		function nextWork(eData) {
+			if (queue.length > 0) {
+				doWork(queue.shift());
+			} else {
+				deferred.resolve(retornos);
+			}
+		};
+
+		
+		nextWork();
+		return deferred.promise;
+	}
+	
+	
+	var param = arrayNumeros.slice();
+	
+	
+	$scope.loadJob(param).then(function(_ret){
+		$scope.allRet = _ret;
+	}, function(_fail){
+		console.log(_fail);
+	});
+	
+	
+	
+
+	
+
+	
+});
+</script>
+
+</body>
+</html>
